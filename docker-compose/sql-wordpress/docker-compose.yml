@@ -1,0 +1,33 @@
+version: '3'
+services:
+  com_sql:
+    image: mysql:5.7      
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_USER: ankit
+      MYSQL_PASSWORD: ankit
+      MYSQL_DATABASE: myNewDB
+    volumes:
+      - compose_sql_storage:/var/lib/mysql
+    restart: always
+
+  com_wp:
+    image: wordpress:5.1.1-php7.3-apache
+    environment:
+      WORDPRESS_DB_HOST: com_sql
+      WORDPRESS_DB_USER: ankit
+      WORDPRESS_DB__PASSWORD: ankit
+      WORDPRESS_DB_NAME: myNewDB
+    volumes:
+      - compose_wp_storage:/var/www/html
+    restart: always
+    depends_on: 
+      - com_sql
+    ports:
+      - 8081:80
+
+volumes:
+  compose_sql_storage:
+  compose_wp_storage:
+
+

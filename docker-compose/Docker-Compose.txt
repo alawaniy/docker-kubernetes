@@ -1,0 +1,329 @@
+Docker-Compose 
+
+Docker Compose:
+-->Docker compose is a one of the tool of the Docker.io.
+-->Docker Compose is a tool for defining and running multi-container Docker applications. 
+-->IF We want to manage multiple containers togehter , we use the docker compose functioanlity.
+-->Suppose your application is build on Microservices architecture and has multiple services running seperatelly like Muletipkle business services , DB services , Cache services then to manage the multiple containers together , we can use the Docker compose.
+-->Docker Compose is used to run multiple containers as a single service.
+
+Example 1:
+For example, suppose you had an application which required NGNIX and MySQL, you could create one file(docker-compose.yml) which would start both the containers as a service without the need to start each one separately.
+
+Example 1:
+For example, suppose you had an application which required wordpress server and MySQL, you could create one file(docker-compose.yml) which would start both the containers as a service without the need to start each one separately.
+
+
+-->when we intall docker , docker-compose is not installed by default , we need to install it seperatelly.
+Install Docker compose on Ubuntu.
+
+## docker-compose version
+
+Note: Docker Compose depends on the docker-compose.yml file 
+docker-compose.yml is the file where we provide all of our config.
+
+How Docker Compose works?
+-->The docker-compose.yml file is broken into sections, each section represents a single container which, when combined with the other containers, create the service. 
+-->For example, you could have a docker-compose.yml file that consists of two sections:
+web - the web server portion of the application.
+db - the database server portion of the application.
+
+Syntax of Docker-compose.yml"
+
+## version: '3'  //The first thing to do is add the header at the top of the file.here we are using v3 of docker compose.
+## services:      // Inside this we list the different services/container we want to create or start.
+
+Note: services refer to containers' configuration
+
+a) Pulling an Image
+-->Sometimes, the image we need for our service has already been published (by us or by others) in Docker Hub, or another Docker Registry.
+-->If that's the case, then we refer to it with the image attribute, by specifying the image name and tag:
+
+services: 
+  my-service:
+    image: ubuntu:latest
+    ...
+ 
+b)Building an Image
+-->Instead, we might need to build an image from the source code by reading its Dockerfile.
+This time, we'll use the "build" keyword, passing the path to the Dockerfile as the value:
+
+services: 
+  my-custom-app:
+    build: /path/to/dockerfile/
+    ...
+ 
+c) We can also use a URL instead of a path:
+services: 
+  my-custom-app:
+    build: https://github.com/my-company/my-project.git
+    ...
+ 
+
+Additionally, we can specify an image name in conjunction with the build attribute, which will name the image once created, making it available to be used by other services:
+
+d) services: 
+  my-custom-app:
+    build: https://github.com/my-company/my-project.git
+    image: my-project-image
+ 
+
+ 
+
+Using below we are defining web portion of the stack , which will use the nginx image.
+##web:
+##      image: nginx
+
+Using below we are defining DB portion of the stack , which will use the mysql image.
+##db:
+##  	image: nginx
+	 
+Below we are exposing container port 3306 to Docker host port 3306.
+##ports:
+##- "3306:3306"	
+
+
+Declaring the Dependencies
+-->Often, we need to create a dependency chain between our services, so that some services get loaded before (and unloaded after) other ones. 
+-->We can achieve this result through the "depends_on" keyword:
+Example:
+services:
+  kafka:
+    image: wurstmeister/kafka:2.11-0.11.0.3
+##    depends_on:
+      - zookeeper
+    ...
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ...
+
+Scaling & Replicas	
+
+Finally, we configure the database environment. The environment will be the configuration options for the database (passwords, users, database name). This section looks like:
+
+##environment:
+##- MYSQL_ROOT_PASSWORD=password1
+##- MYSQL_USER=user
+##- MYSQL_PASSWORD=password2
+##- MYSQL_DATABASE=database 
+
+
+
+Example:
+vim docker-compose.yml
+version: '3'
+services:                       // We can have multiple services , it means our container.
+  dbos:
+    image: mysql:5.7
+    volumes:
+      - mysql_storage_new:/var/lib/mysql
+	  - mysql_storage_new1:/var/lib/mysql1	
+    restart: always
+    enviornment:
+	  MYSQL_ROOT_PASSWORD: admin
+      MYSQL_USER: ankit
+      MYSQL_PASSWORD: ankit
+      MYSQL_DATABASE: mydb
+
+  wpos:
+    image: wordpress:5.1.1-php7.3-apache
+    volumes:
+      - wp_storage_new:/var/www/html
+	  - wp_storage_new1:/var/www/html1	
+    restart: always
+    depends_on:
+      - dbos
+    ports:
+	  - 8081:80
+    enviornment:
+	  WORDPRESS_DB_HOST:dbos
+      WORDPRESS_DB_USER:ankit
+      WORDPRESS_DB_PASSWORD:ankit
+      WORDPRESS_DB_NAME: mydb
+
+volumes:
+  mysql_storage_new
+  mysql_storage_new1
+  wp_storage_new
+  wp_storage_new
+  
+Note:
+
+
+
+
+## docker-compose up       // This command will create and Start containrs
+// This command will take the docker-compose.yml file in your local directory and start building the containers.by-default it will look in the current directory.
+
+## docker-compose up -d   // this will run the containers in detached mode.
+
+## docker-compose ps  or docker ps     // You shhould be in the root directory to run the docker-compose ps 
+
+## docker-compodr logs
+## docker-compose logs -f
+
+## docker-compose stop    // It will move the "Exit"  container to "UP" mode.
+## docker-compose start    // It will move the "UP"  container to "Exit" mode.
+
+## docker-compose rm   // Stopped containers we can remove it.
+
+How docker-compose is different from the Docker swarm?
+
+
+Docker-compose commands:
+
+## docker-compose start
+## docker-compose stop
+
+## docker-compose pause
+##docker-compose unpause
+
+## docker-compose ps
+## docker-compose up
+## docker-compose down  // It will tear down the running containers.
+
+==========================================================================================================================
+==========================================================================================================================
+Communication between the Docker container:
+
+A) Linking Container by name: Legacy Linking
+
+-->This is one of the way by which docker containers can communicate with each other.
+-->In this approach we create the container by giving the container name and we can link it with another container.
+
+--link // we use to link one container to the another.
+
+docker run -itd -e WORDPRESS_DB_HOST=dbos -e WORDPRESS_DB_USER=ankit -e WORDPRESS_DB_PASSWORD=ankit  -e WORDPRESS_DB_NAME= mydb --name=wpos -v wp_storage:/var/www/html --link dbos -p 8080:80 wordpress:5.1.1-php7.3-apache
+
+
+==========================================================================================================================
+
+Docker Compose: Docker Compose is used when you are trying to define a multi-container application on Single Node.
+Docker Swarm:Docker Compose is used when you are trying to define a multi-container application (Containers) across multiple physical or virtual machines.
+
+==========================================================================================================================
+
+Difference between Docker-compose & Docker Swarm & Kubernetes:
+
+-->Monolithic Applications are split into various microservices and they typically communicate with one another via a REST API (typically JSON formatted payloads over HTTP).
+-->Docker containers are ideal for this kind of architecture.
+-->You can package your frontend "microservice" into a Docker container, the database goes into another, and so on and so forth. 
+-->Each service talk to another over a predefined REST API instead of being a monolith written as a single piece of software.
+
+Probalem 1: What we want to achieve?
+-->""Frontend Service created on React"" running on one container will talk to ""DB services"" deployed to another container through REST API's.
+-->Now the thing is that We dont want to deploy each and every container seperatelly , We dont want to link them manually.
+
+What Docker can't provide:
+-->With Docker we have to deploy each and every container manually , We need to configure our command in the same way , We have to do the manual linking as well in between the containr.
+
+Solution:
+-->Docker-Compose lets you automate the deployment of multiple containers.
+-->With docker-compose.yml file we can automate the deployment of multiple container.
+
+
+Problem 2: Now that we have split open the web app into multiple containers, it makes little sense to keep them all on a single server (worse still on a single virtual machine!) that’s where services like Docker Swarm and Kubernetes come into play.
+
+
+Docker-Swarm::::
+-->Docker Swarm allows you to run multiple replicas of your application across multiple servers. 
+-->If your microservice is written in a way that it can scale ‘horizontally’ then you can use Docker Swarm to deploy your web app across multiple data centers and multiple regions. 
+-->This offers resilience against the failure of one or more data centers or network links. 
+-->This is typically done using a subcommand in Docker, that is, Docker Stack.
+-->Docker stack is part of the Docker swarm.
+
+V.V.V.IMP: 
+-->Docker-Swarm mode got integrated into the Docker Engine in 1.12.
+-->We need to run the docker Engine in swarm mode. (docker swarm init)
+
+Docker Stack
+-->In Docker swarm it’s possible to make use of docker-compose.yml files to bring up stacks of Docker containers, without having to install Docker Compose.
+-->The command is called docker stack, and it looks exactly the same to docker-compose. Here’s a comparison:
+
+$ docker-compose -f docker-compose up
+
+$ docker stack deploy -c docker-compose.yml somestackname
+
+-->The "docker stack deploy" command supports any Compose file of version “3.0” or above.
+-->Note: If you’re trying things out on a local development environment, you can put your engine into swarm mode with "docker swarm init".
+-->docker-swarm succeeded docker-compose and overlay networks is the new (recommended) way to connect containers?
+-->My understanding is that Swarm overlay networks are now the way to connect containers.
+Note:The Docker Stack subcommand behaves a lot more like the Docker-Compose command and that can lead to misconceptions to someone using either of the technologies.
+
+
+Pretty similar indeed. Docker Swarm & Docker Compose Both of those will bring up all the services, volumes, networks and everything else, just as specified in docker-compose.yml files. But why has this happened, and is docker stack different from Docker Compose somehow? Why was it introduced? What to mind, apart from the syntax?
+
+
+Source of Confusion
+-->In terms of usage and workflow, both the technologies docker-compose & Docker swarm work very similar to one another, and this causes confusion. -->The way you deploy your app using either Docker Swarm or Docker-Compose is very similar. 
+-->You define your application in a YAML file, this file will contain  the image name, the configuration for each image and also the scale (number of replicas) that each microservice will be required to meet in deployment.
+-->The difference lies mostly in the backend, where docker-compose deploys containers on a single Docker host whereas Docker Swarm deploys it across multiple nodes. 
+
+Loosely speaking, it can still do most things that docker-compose can but it scales it across multiple Docker hosts
+
+Similarities between Docker-compose & Docker swarm:
+-->Both Docker Swarm and Docker-Compose have the following similarities:
+
+1) They both take YAML formatted definitions of your application stack.
+2) They are both meant to deal with multi-container applications (microservices)
+3) They both have a scale parameter that allows you to run multiple containers of the same image allowing your microservice to scale horizontally.
+4) They are both maintained by the same company, i.e, Docker, Inc.
+
+Differences between Docker-compose & Docker swarm:
+-->The few differences between Docker Swarm and Docker-Compose:
+-->Docker Swarm is used to scale your web app across one or more servers. Where as Docker-compose will simply run your web app on a single Docker host.
+-->Scaling your web app Docker Swarm offers serious high availability and fault tolerance. 
+-->Scaling your web app using Docker-Compose on a single host is useful only for testing and development.
+-->Docker Swarm and related subcommands like Docker Swarm and Docker Stack are built into the Docker CLI itself. They are all part of the Docker binary that you call via your terminal.
+-->Docker-Compose is standalone binary in and of itself. (We need to install the docker-compose binary seperatelly).
+
+
+Note:Docker Swarm and related subcommands like Docker Swarm and Docker Stack are paort of the docker client.
+Note:Docker compose we need to install speratelly , they are not part of the docker Client.
+-->The Docker Stack functionality, is included with the Docker engine. You don’t need to install additional packages to use it Deploying docker stacks is part of the swarm mode. 
+
+
+Note:As described above, they are both completely different tools and each solves a completely different problem so it is not like one is an alternative for the other. 
+
+Note:Docker stack does not support docker-compose.yml files which are written according to the version 2 specification. It has to be the most recent one, which is 3 at the time of writing, while Docker Compose still can handle versions 2 and 3 without problems.
+
+-->Both docker-compose and the new docker stack commands can be used with docker-compose.yml files which are written according to the specification of version 3.
+
+
+
+version: '3.3'
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - my_db_data:/var/lib/mysql
+      - ./init.sql:/data/application/init.sql
+    restart: always
+    command: --init-file /data/application/init.sql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: customer
+      MYSQL_USER: ankit
+      MYSQL_PASSWORD: ankit
+
+volumes:
+  my_db_data: {}
+  
+  
+  
+create DATABASE IF NOT EXISTS  test;
+
+drop table test.customer;
+
+create TABLE IF NOT EXISTS customer (
+  id int NOT NULL AUTO_INCREMENT,
+  customer_name VARCHAR(128),
+  city VARCHAR(128),
+  PRIMARY KEY (id)
+);
+
+
+insert into test.customer (customer_name,city) values("Ankit","Ajmer");
